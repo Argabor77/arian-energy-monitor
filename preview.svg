@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1050" height="500" viewBox="0 0 1050 500">
+ <rect width="1050" height="500" rx="18" fill="#141619"/>
+ <rect x="18" y="18" width="1014" height="464" rx="16" fill="#202326" stroke="#34383e"/>
+ <rect x="40" y="40" width="54" height="54" rx="16" fill="#159d91"/>
+ <path d="M70 49L58 72H67L64 86 78 63H69Z" fill="white"/>
+ <g font-family="Arial,sans-serif" fill="#f4f5f7">
+ <text x="110" y="53" fill="#35c9b3" font-size="12" font-weight="bold" letter-spacing="2">ENERGY MONITOR</text>
+ <text x="110" y="78" font-size="27" font-weight="bold">Arian Energy Monitor</text>
+ <text x="110" y="97" fill="#a2abb5" font-size="13">Household energy at a glance</text>
+ <rect x="40" y="121" width="310" height="105" rx="14" fill="#233534" stroke="#3f6865"/>
+ <rect x="370" y="121" width="310" height="105" rx="14" fill="#292f40" stroke="#485675"/>
+ <rect x="700" y="121" width="310" height="105" rx="14" fill="#3c3329" stroke="#6e5841"/>
+ <g font-size="11" font-weight="bold"><text x="56" y="147" fill="#35c9b3">MEASURED ENERGY</text><text x="386" y="147" fill="#8fa8ff">ESTIMATED COST</text><text x="716" y="147" fill="#f5b465">TOP CONSUMER</text></g>
+ <g font-size="27" font-weight="bold"><text x="56" y="184">42.50 kWh</text><text x="386" y="184">€15.30</text><text x="716" y="184">Home office</text></g>
+ <g font-size="12" fill="#a2abb5"><text x="56" y="207">Meter readings</text><text x="386" y="207">Energy × tariff</text><text x="716" y="207">47.1% of measured energy</text></g>
+ <text x="40" y="256" font-size="16" font-weight="bold">Devices</text><text x="1010" y="256" font-size="12" fill="#a2abb5" text-anchor="end">Sorted by consumption</text>
+ <g fill="#292d31" stroke="#41464d"><rect x="40" y="273" width="230" height="139" rx="14"/><rect x="286" y="273" width="230" height="139" rx="14"/><rect x="532" y="273" width="230" height="139" rx="14"/><rect x="778" y="273" width="232" height="139" rx="14"/></g>
+ <g font-size="14" font-weight="bold"><text x="57" y="305">Home office</text><text x="303" y="305">TV</text><text x="549" y="305">Refrigerator</text><text x="795" y="305">Lighting</text></g>
+ <g font-size="13" fill="#a2abb5"><text x="57" y="348">20.000 kWh</text><text x="303" y="348">12.000 kWh</text><text x="549" y="348">8.000 kWh</text><text x="795" y="348">2.500 kWh</text></g>
+ <g font-size="21" font-weight="bold" text-anchor="end"><text x="253" y="348">€7.20</text><text x="499" y="348">€4.32</text><text x="745" y="348">€2.88</text><text x="993" y="348">€0.90</text></g>
+ <g fill="#454a50"><rect x="57" y="377" width="196" height="6" rx="3"/><rect x="303" y="377" width="196" height="6" rx="3"/><rect x="549" y="377" width="196" height="6" rx="3"/><rect x="795" y="377" width="198" height="6" rx="3"/></g>
+ <rect x="57" y="377" width="92" height="6" rx="3" fill="#35c9b3"/><rect x="303" y="377" width="55" height="6" rx="3" fill="#8fa8ff"/><rect x="549" y="377" width="37" height="6" rx="3" fill="#f5b465"/><rect x="795" y="377" width="12" height="6" rx="3" fill="#e68bc5"/>
+ <text x="40" y="448" font-size="12" fill="#a2abb5">Illustrative sample data · cumulative meter readings · estimated costs, not a bill</text>
+ </g>
+</svg>
