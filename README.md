@@ -2,7 +2,18 @@
 
 A responsive Home Assistant dashboard card for device-level energy and estimated electricity costs. Designed from an idea by Arian and developed collaboratively with ChatGPT.
 
-**Current release: v0.3.1 beta** - cumulative device meters and interactive consumption history.
+**Version: v0.3.2 beta** - a complete energy dashboard in one card.
+
+## What's new in v0.3.2
+
+- Dedicated weekly device comparison and rolling six-calendar-month overview, with grouped or stacked bars and interactive device legends.
+- Date picker, previous/next day navigation, hourly consumption and selected-day device distribution.
+- Energy or estimated cost across all historical charts, with per-device details on chart interaction.
+- All sections are built into the same card; no separate dashboard cards are needed. The existing v0.3.1 configuration is compatible.
+- **Deutsch:** Wochenvergleich, sechs Monate, Tagesauswahl, stündlicher Verbrauch und Geräteverteilung direkt in der Karte.
+- **Türkçe:** Haftalık karşılaştırma, son altı ay, gün seçimi, saatlik tüketim ve cihaz dağılımı tek kartta.
+
+![Illustrative preview of the built-in history sections](preview-history.svg)
 
 ## What's new in v0.3.1
 
@@ -48,7 +59,7 @@ All calculations run locally inside the Home Assistant frontend. The card does n
 
 1. Download `arian-energy-monitor.js` from the release assets.
 2. Place it in Home Assistant's `www` directory (usually `/config/www/`).
-3. In Settings → Dashboards → Resources, add `/local/arian-energy-monitor.js?v=0.3.1` as a JavaScript module.
+3. In Settings → Dashboards → Resources, add `/local/arian-energy-monitor.js?v=0.3.2` as a JavaScript module.
 4. Refresh your browser. Edit a dashboard and select **Arian Energy Monitor** in the card picker.
 5. Enter your tariff, choose the currency, and add energy sensors with your preferred names, icons and colors.
 
