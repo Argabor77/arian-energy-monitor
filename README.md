@@ -2,7 +2,20 @@
 
 A responsive Home Assistant dashboard card for device-level energy and estimated electricity costs. Designed from an idea by Arian and developed collaboratively with ChatGPT.
 
-**Current release: v0.3.0 beta** — cumulative energy meters; no daily/monthly billing history yet.
+**Current release: v0.3.1 beta** - cumulative device meters and interactive consumption history.
+
+## What's new in v0.3.1
+
+- Built-in historical charts: today (hourly), last 7 days (daily), current month (daily), and current year (monthly).
+- Switch between energy (kWh) and estimated costs in the selected currency. Colored columns show the contribution of each configured device.
+- Uses Home Assistant's existing Recorder statistics; no additional sensors or YAML are required if your energy sensors already provide statistics.
+- Existing card configurations remain compatible. Update from Marketplace, then refresh your browser.
+
+**Deutsch:** Neu sind integrierte Verbrauchsdiagramme für heute, die letzten 7 Tage, den aktuellen Monat und das aktuelle Jahr. Wechsel zwischen kWh und geschätzten Kosten; bestehende Karten bleiben kompatibel.
+
+**Türkçe:** Bugün, son 7 gün, bu ay ve bu yıl için kartın içinde tüketim grafikleri eklendi. kWh ile tahmini maliyet arasında geçiş yapılabilir; mevcut kart ayarları korunur.
+
+History requires energy sensors with recorded sum statistics (normally `total` or `total_increasing`). Missing statistics are excluded, rather than treated as measured zero; a new sensor may need time to accumulate history. Historical cost is estimated using the **current configured tariff**, not past tariffs or a utility bill.
 
 [![Install Arian Energy Monitor in Home Assistant](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=Argabor77&repository=arian-energy-monitor&category=plugin)
 
@@ -35,7 +48,7 @@ All calculations run locally inside the Home Assistant frontend. The card does n
 
 1. Download `arian-energy-monitor.js` from the release assets.
 2. Place it in Home Assistant's `www` directory (usually `/config/www/`).
-3. In Settings → Dashboards → Resources, add `/local/arian-energy-monitor.js?v=0.3.0` as a JavaScript module.
+3. In Settings → Dashboards → Resources, add `/local/arian-energy-monitor.js?v=0.3.1` as a JavaScript module.
 4. Refresh your browser. Edit a dashboard and select **Arian Energy Monitor** in the card picker.
 5. Enter your tariff, choose the currency, and add energy sensors with your preferred names, icons and colors.
 

@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {energy,calculate,normalize}=require('./arian-energy-monitor.js');
+const {energy,calculate,normalize,range,aggregateStats}=require('./arian-energy-monitor.js');
 const s=(state,unit)=>({state,attributes:{unit_of_measurement:unit}});
 test('energy conversion',()=>{
   assert.equal(energy(s('1500','Wh')),1.5);
@@ -25,4 +25,17 @@ test('tariff defaults and free energy',()=>{
   assert.equal(normalize({tariff:0}).tariff,0);
   assert.equal(normalize({tariff:.42}).tariff,.42);
   assert.deepEqual(normalize({devices:null}).devices,[]);
+});
+test('history aggregates devices without treating missing values as zero',()=>{
+  const result=aggregateStats({'sensor.a':[{start:1000,change:1},{start:2000,change:null}], 'sensor.b':[{start:1000,change:2},{start:3000,change:0}]},['sensor.a','sensor.b']);
+  assert.deepEqual(result.map(x=>x.total),[3,0]);
+  assert.equal(Object.hasOwn(result[1].values,'sensor.a'),false);
+});
+test('historical time ranges',()=>{
+  const now=new Date(2026,10,25,12);
+  assert.equal(range('day',now).period,'hour');
+  assert.equal(new Date(range('week',now).start).getDate(),19);
+  assert.equal(new Date(range('month',now).start).getDate(),1);
+  assert.equal(range('year',now).period,'month');
+  assert.equal(new Date(range('year',now).start).getMonth(),0);
 });

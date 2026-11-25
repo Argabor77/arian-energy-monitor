@@ -1,4 +1,4 @@
-/* Arian Energy Monitor — v0.3.0 beta, MIT */
+/* Arian Energy Monitor - v0.3.1 beta, MIT */
 (() => {
   'use strict';
   const tag = 'arian-energy-monitor';
@@ -28,7 +28,24 @@
       .sort((a,b)=>(b.v??-1)-(a.v??-1));
     return {rows,total:rows.reduce((sum,d)=>sum+(d.v??0),0),active:rows.filter(d=>d.v!==null).length};
   }
-  if(typeof module==='object'&&module.exports){module.exports={energy,calculate,normalize};return;}
+  const historyText={en:['Consumption history','Today','7 days','This month','This year','Energy','Cost','Loading statistics…','No recorded energy statistics for this period.','Statistics could not be loaded.','Recorded consumption','Estimated at current tariff; missing statistics are not zero.','Refresh','No data'],de:['Verbrauchsverlauf','Heute','7 Tage','Dieser Monat','Dieses Jahr','Energie','Kosten','Statistiken werden geladen…','Keine aufgezeichneten Energiestatistiken für diesen Zeitraum.','Statistiken konnten nicht geladen werden.','Erfasster Verbrauch','Geschätzt zum aktuellen Tarif; fehlende Statistiken sind nicht null.','Aktualisieren','Keine Daten'],tr:['Tüketim geçmişi','Bugün','7 gün','Bu ay','Bu yıl','Enerji','Maliyet','İstatistikler yükleniyor…','Bu dönem için kayıtlı enerji istatistiği yok.','İstatistikler yüklenemedi.','Kaydedilen tüketim','Mevcut tarifeye göre tahmin; eksik istatistik sıfır değildir.','Yenile','Veri yok']};
+  function range(mode,now=new Date()){
+    const start=new Date(now);start.setHours(0,0,0,0);
+    if(mode==='week')start.setDate(start.getDate()-6);
+    if(mode==='month')start.setDate(1);
+    if(mode==='year'){start.setDate(1);start.setMonth(0);}
+    return {start:start.toISOString(),end:now.toISOString(),period:mode==='day'?'hour':mode==='year'?'month':'day'};
+  }
+  function aggregateStats(data,ids){
+    const map=new Map();
+    for(const id of ids)for(const row of data?.[id]||[]){
+      const stamp=typeof row.start==='number'?row.start:Date.parse(row.start);
+      if(!Number.isFinite(stamp)||typeof row.change!=='number'||!Number.isFinite(row.change)||row.change<0)continue;
+      if(!map.has(stamp))map.set(stamp,{});map.get(stamp)[id]=row.change;
+    }
+    return [...map].sort((a,b)=>a[0]-b[0]).map(([stamp,values])=>({stamp,values,total:Object.values(values).reduce((a,b)=>a+b,0)}));
+  }
+  if(typeof module==='object'&&module.exports){module.exports={energy,calculate,normalize,range,aggregateStats};return;}
   const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
   const icon=name=>{const e=el('ha-icon');e.setAttribute('icon',name);return e;};
   function locale(c,h){const lang=(c.language||h?.language||'en').split('-')[0];return messages[lang]?lang:'en';}
@@ -53,16 +70,38 @@
     .bubble ha-icon{--mdc-icon-size:21px}.name{font-size:13px;font-weight:650;overflow-wrap:anywhere}.vals{display:flex;justify-content:space-between;align-items:baseline;gap:7px;flex-wrap:wrap}
     .price{font-size:20px;color:var(--primary-text-color);font-weight:750;white-space:nowrap}.bar{display:flex;align-items:center;gap:8px;margin-top:9px}
     .track{height:5px;flex:1;background:var(--divider-color);border-radius:10px;overflow:hidden}.fill{height:100%;background:var(--accent);border-radius:10px}.percent{font-size:10px;white-space:nowrap}.note{margin-top:15px;line-height:1.5}
+    .history{margin-top:20px;padding:15px;border:1px solid var(--divider-color);border-radius:16px;background:var(--secondary-background-color)}.controls,.legend{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.controls{margin:10px 0}.controls button{font:inherit;font-size:12px;color:var(--primary-text-color);background:transparent;border:1px solid var(--divider-color);border-radius:9px;padding:7px 10px;cursor:pointer}.controls button[aria-pressed=true]{background:#08756b;color:white;border-color:#08756b}.chart-scroll{overflow-x:auto}.plot{display:flex;gap:5px;align-items:end;height:180px;border-bottom:1px solid var(--divider-color)}.column{flex:1;min-width:15px;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center}.stack{display:flex;flex-direction:column-reverse;width:80%;max-width:45px;border-radius:5px 5px 0 0;overflow:hidden;min-height:1px}.segment{min-height:0}.axis{font-size:9px;color:var(--secondary-text-color);white-space:nowrap;margin-top:5px}.legend{margin-top:12px;font-size:11px;gap:10px}.legend span{display:flex;align-items:center;gap:5px}.dot{width:9px;height:9px;border-radius:3px;display:inline-block}.history-total{font-size:22px;font-weight:700;margin:5px 0}.history-msg{padding:24px 0;color:var(--secondary-text-color);text-align:center}
     @container(max-width:560px){.wrap{padding:14px}.summary{grid-template-columns:1fr 1fr}.metric:last-child{grid-column:1/-1}.title{font-size:22px}.list{grid-template-columns:repeat(2,minmax(0,1fr))}.tile{padding:10px}.price{font-size:17px}}
     @container(max-width:310px){.list,.summary{grid-template-columns:1fr}}
   `;
   class Card extends HTMLElement {
-    constructor(){super();this.attachShadow({mode:'open'});}
+    constructor(){super();this.attachShadow({mode:'open'});this.mode='week';this.chartUnit='energy';this.cache=new Map();}
     static getConfigElement(){return document.createElement(editorTag);}
     static getStubConfig(){return {type:'custom:'+tag,tariff:0.36,devices:[]};}
     setConfig(c){this.config=normalize(c);this.render();}
     set hass(h){const old=this._hass;this._hass=h;if(!old||old.language!==h.language||this.config?.devices.some(d=>old.states[d.entity]!==h.states[d.entity]))this.render();}
-    getCardSize(){return 3+Math.ceil((this.config?.devices.length||0)/2);}
+    getCardSize(){return 9+Math.ceil((this.config?.devices.length||0)/2);}
+    loadHistory(ids,key,force=false){
+      const old=this.cache.get(key);if(!force&&old&&(old.pending||Date.now()-old.time<300000))return;
+      if(!ids.length)return;const entry={pending:true,time:Date.now()};this.cache.set(key,entry);
+      const r=range(this.mode);this._hass.callWS({type:'recorder/statistics_during_period',start_time:r.start,end_time:r.end,period:r.period,statistic_ids:ids,types:['change'],units:{energy:'kWh'}}).then(data=>{entry.data=aggregateStats(data,ids);entry.pending=false;this.render();}).catch(()=>{entry.error=true;entry.pending=false;this.render();});
+    }
+    history(rows,l,fmt,money,name){
+      const t=historyText[l],box=el('section',undefined,'history'),controls=el('div',undefined,'controls'),ids=rows.map(d=>d.entity).sort(),key=this.mode+'|'+ids.join('|');
+      const button=(label,pressed,action)=>{const b=el('button',label);b.type='button';if(pressed!==null)b.setAttribute('aria-pressed',String(pressed));b.addEventListener('click',action);return b;};
+      box.append(el('div',t[0],'caption'));
+      for(const [i,mode] of ['day','week','month','year'].entries())controls.append(button(t[i+1],this.mode===mode,()=>{this.mode=mode;this.render();}));
+      controls.append(button(t[5],this.chartUnit==='energy',()=>{this.chartUnit='energy';this.render();}),button(t[6],this.chartUnit==='cost',()=>{this.chartUnit='cost';this.render();}),button('↻ '+t[12],null,()=>{this.loadHistory(ids,key,true);this.render();}));box.append(controls);
+      this.loadHistory(ids,key);const entry=this.cache.get(key),data=entry?.data;
+      if(entry?.pending||entry?.error||!data?.length){box.append(el('div',entry?.pending?t[7]:entry?.error?t[9]:t[8],'history-msg'));return box;}
+      const value=n=>this.chartUnit==='cost'?money(n*this.config.tariff):fmt(n,3)+' kWh';
+      box.append(el('div',value(data.reduce((s,d)=>s+d.total,0)),'history-total'),el('div',t[10],'sub'));
+      const scroll=el('div',undefined,'chart-scroll'),plot=el('div',undefined,'plot'),max=Math.max(...data.map(d=>d.total),0.000001);plot.style.minWidth=Math.max(250,data.length*22)+'px';
+      const date=new Intl.DateTimeFormat(l,this.mode==='day'?{hour:'2-digit',minute:'2-digit'}:this.mode==='year'?{month:'short'}:{day:'numeric',month:'short'});
+      for(const d of data){const column=el('div',undefined,'column'),stack=el('div',undefined,'stack');stack.style.height=Math.max(0,d.total/max*82)+'%';column.title=date.format(d.stamp)+' — '+value(d.total)+'\n'+rows.map(r=>name(r)+': '+(Object.hasOwn(d.values,r.entity)?value(d.values[r.entity]):t[13])).join('\n');
+        for(const row of rows){const v=d.values[row.entity];if(!(v>0))continue;const segment=el('div',undefined,'segment');segment.style.background=row.accent;segment.style.flex=String(v);stack.append(segment);}column.append(stack,el('span',date.format(d.stamp),'axis'));plot.append(column);}
+      scroll.append(plot);box.append(scroll);const legend=el('div',undefined,'legend');for(const row of rows){const item=el('span'),dot=el('i',undefined,'dot');dot.style.background=row.accent;item.append(dot,el('span',name(row)));legend.append(item);}box.append(legend,el('div',t[11],'note'));return box;
+    }
     render(){
       if(!this.config||!this._hass)return;
       const c=this.config,h=this._hass,l=locale(c,h),t=messages[l],{rows,total,active}=calculate(c,h.states);
@@ -85,7 +124,7 @@
         const vals=el('div',undefined,'vals');vals.append(el('span',d.v===null?t[12]:fmt(d.v,3)+' kWh','energy'),el('strong',d.v===null?'—':money(d.v*c.tariff),'price'));
         const pct=d.v!==null&&total>0?d.v/total*100:0,bar=el('div',undefined,'bar'),track=el('div',undefined,'track'),fill=el('div',undefined,'fill');fill.style.width=pct+'%';track.append(fill);bar.append(track,el('span',d.v===null?t[13]:fmt(pct,1)+' %','percent'));tile.append(head,vals,bar);list.append(tile);
       }
-      wrap.append(list,el('div',t[14],'note'));card.append(wrap);const style=el('style');style.textContent=css;this.shadowRoot.replaceChildren(style,card);
+      wrap.append(list,el('div',t[14],'note'),this.history(rows,l,fmt,money,name));card.append(wrap);const style=el('style');style.textContent=css;this.shadowRoot.replaceChildren(style,card);
     }
   }
   class Editor extends HTMLElement {
