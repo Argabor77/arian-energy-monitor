@@ -1,4 +1,4 @@
-/* Arian Energy Monitor - v0.3.2 beta, MIT */
+/* Arian Energy Monitor - v0.3.3 beta, MIT */
 (() => {
   'use strict';
   const tag = 'arian-energy-monitor';
@@ -126,15 +126,23 @@
       box.append(el('div',t[0],'caption'));
       for(const [i,mode] of ['day','week','month','year'].entries())controls.append(button(t[i+1],this.mode===mode,()=>{this.mode=mode;this.render();}));
       controls.append(button(t[5],this.chartUnit==='energy',()=>{this.chartUnit='energy';this.render();}),button(t[6],this.chartUnit==='cost',()=>{this.chartUnit='cost';this.render();}),button('↻ '+t[12],null,()=>{this.loadHistory(ids,key,true);this.render();}));box.append(controls);
-      this.loadHistory(ids,key);const entry=this.cache.get(key),data=entry?.data;
+      this.loadHistory(ids,key);const entry=this.cache.get(key),raw=entry?.data,hidden=this.hiddenDevices.get('history')||new Set(),visible=rows.filter(r=>!hidden.has(r.entity));
+      const legend=el('div',undefined,'legend');
+      const labels={en:['Select all','Clear all','No devices selected'],de:['Alle auswählen','Auswahl aufheben','Keine Geräte ausgewählt'],tr:['Tümünü seç','Seçimi kaldır','Cihaz seçilmedi']}[l];
+      const setHidden=set=>{this.hiddenDevices.set('history',set);this.render();};
+      const actions=el('div',undefined,'controls');actions.append(button(labels[0],null,()=>setHidden(new Set())),button(labels[1],null,()=>setHidden(new Set(ids))));
+      for(const row of rows){const item=button(name(row),!hidden.has(row.entity),()=>{const set=new Set(hidden);if(set.has(row.entity))set.delete(row.entity);else set.add(row.entity);setHidden(set);}),dot=el('i',undefined,'dot');dot.style.background=row.accent;item.prepend(dot);item.title=dashboardText[l][12];legend.append(item);}
+      box.append(actions,legend);
+      if(!visible.length){box.append(el('div',labels[2],'history-msg'));return box;}
+      const data=raw?.filter(d=>visible.some(r=>Object.hasOwn(d.values,r.entity))).map(d=>({...d,total:visible.reduce((sum,r)=>sum+(d.values[r.entity]??0),0)}));
       if(entry?.pending||entry?.error||!data?.length){box.append(el('div',entry?.pending?t[7]:entry?.error?t[9]:t[8],'history-msg'));return box;}
       const value=n=>this.chartUnit==='cost'?money(n*this.config.tariff):fmt(n,3)+' kWh';
       box.append(el('div',value(data.reduce((s,d)=>s+d.total,0)),'history-total'),el('div',t[10],'sub'));
       const scroll=el('div',undefined,'chart-scroll'),plot=el('div',undefined,'plot'),max=Math.max(...data.map(d=>d.total),0.000001);plot.style.minWidth=Math.max(250,data.length*22)+'px';
       const date=new Intl.DateTimeFormat(l,this.mode==='day'?{hour:'2-digit',minute:'2-digit'}:this.mode==='year'?{month:'short'}:{day:'numeric',month:'short'});
-      for(const d of data){const column=el('div',undefined,'column'),stack=el('div',undefined,'stack');stack.style.height=Math.max(0,d.total/max*82)+'%';column.title=date.format(d.stamp)+' — '+value(d.total)+'\n'+rows.map(r=>name(r)+': '+(Object.hasOwn(d.values,r.entity)?value(d.values[r.entity]):t[13])).join('\n');
-        for(const row of rows){const v=d.values[row.entity];if(!(v>0))continue;const segment=el('div',undefined,'segment');segment.style.background=row.accent;segment.style.flex=String(v);stack.append(segment);}column.append(stack,el('span',date.format(d.stamp),'axis'));plot.append(column);}
-      scroll.append(plot);box.append(scroll);const legend=el('div',undefined,'legend');for(const row of rows){const item=el('span'),dot=el('i',undefined,'dot');dot.style.background=row.accent;item.append(dot,el('span',name(row)));legend.append(item);}box.append(legend,el('div',t[11],'note'));return box;
+      for(const d of data){const column=el('div',undefined,'column'),stack=el('div',undefined,'stack');stack.style.height=Math.max(0,d.total/max*82)+'%';column.title=date.format(d.stamp)+' — '+value(d.total)+'\n'+visible.map(r=>name(r)+': '+(Object.hasOwn(d.values,r.entity)?value(d.values[r.entity]):t[13])).join('\n');
+        for(const row of visible){const v=d.values[row.entity];if(!(v>0))continue;const segment=el('div',undefined,'segment');segment.style.background=row.accent;segment.style.flex=String(v);stack.append(segment);}column.append(stack,el('span',date.format(d.stamp),'axis'));plot.append(column);}
+      scroll.append(plot);box.append(scroll,el('div',t[11],'note'));return box;
     }
     render(){
       if(!this.config||!this._hass)return;
