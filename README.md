@@ -2,7 +2,19 @@
 
 A responsive Home Assistant dashboard card for device-level energy and estimated electricity costs. Designed from an idea by Arian and developed collaboratively with ChatGPT.
 
-**Version: v0.3.2 beta** - a complete energy dashboard in one card.
+**Version: v0.3.3 beta** - a complete energy dashboard in one card.
+
+## What's new in v0.3.3
+
+- Interactive device filtering in **Consumption history**: click a device to hide or show it.
+- **Select all** and **Clear all** make it easy to focus on one device or compare several.
+- The chart, total and tooltips reflect only selected devices; selections remain active when switching periods or energy/cost mode.
+- Empty selections show a clear message. Missing statistics remain missing, not measured zero.
+- Filters are independent of the other historical charts. Existing card configurations remain compatible.
+
+**Deutsch:** Im Verbrauchsverlauf lassen sich Geräte einzeln ein- und ausblenden. „Alle auswählen“ und „Auswahl aufheben“ ermöglichen einen schnellen Vergleich; Summe und Diagramm passen sich an.
+
+**Türkçe:** Tüketim geçmişinde cihazları tek tek gösterip gizleyebilir, tümünü seçebilir veya seçimi kaldırabilirsiniz. Grafik ve toplam yalnızca seçili cihazlara göre hesaplanır.
 
 ## What's new in v0.3.2
 
@@ -59,7 +71,7 @@ All calculations run locally inside the Home Assistant frontend. The card does n
 
 1. Download `arian-energy-monitor.js` from the release assets.
 2. Place it in Home Assistant's `www` directory (usually `/config/www/`).
-3. In Settings → Dashboards → Resources, add `/local/arian-energy-monitor.js?v=0.3.2` as a JavaScript module.
+3. In Settings → Dashboards → Resources, add `/local/arian-energy-monitor.js?v=0.3.3` as a JavaScript module.
 4. Refresh your browser. Edit a dashboard and select **Arian Energy Monitor** in the card picker.
 5. Enter your tariff, choose the currency, and add energy sensors with your preferred names, icons and colors.
 
@@ -69,6 +81,7 @@ No additional integration or API token is required. For an upgrade, replace the 
 
 ```yaml
 type: custom:arian-energy-monitor
+title: My Energy Dashboard
 tariff: 0.36
 currency: EUR
 language: de
@@ -79,7 +92,7 @@ devices:
     color: '#35c9b3'
 ```
 
-The example entity is a placeholder. Choose your own energy sensor in the visual editor. Supported energy units: Wh, kWh and MWh. W is power, not energy.
+The optional title is entirely user-configurable in the visual editor (Card title / Kartentitel / Kart başlığı). If omitted, the card displays its localized default title. No personal name or device configuration is bundled. The example entity is a placeholder. Choose your own energy sensor in the visual editor. Supported energy units: Wh, kWh and MWh. W is power, not energy.
 
 The card normalizes energy to kWh, ignores unavailable and invalid measurements, prevents duplicate entity IDs from being summed twice, and multiplies measured kWh by the configured tariff. It does not infer whether different sensors meter the same physical load; do not select both a parent meter and its submeter if doing so double-counts consumption. Meter reset dates can differ. The total is not a utility bill and excludes unmonitored devices and fixed charges.
 
